@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { Trash2, Edit2 } from 'lucide-react';
@@ -7,7 +7,7 @@ import { DataMigration } from './DataMigration';
 export const Dashboard = ({ onEdit }) => {
     const { expenses, deleteExpense } = useData();
     const { selectedCurrency, convert, format } = useCurrency();
-    const [filterType, setFilterType] = useState('all'); // all, debit, credit
+    const [filterType, setFilterType] = useState('debit'); // all, debit, credit
 
     const filteredExpenses = expenses.filter(expense => {
         if (filterType === 'all') return true;
@@ -35,7 +35,7 @@ export const Dashboard = ({ onEdit }) => {
             <DataMigration />
 
             <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                {['all', 'debit', 'credit'].map((type) => (
+                {['debit', 'credit'].map((type) => (
                     <button
                         key={type}
                         onClick={() => setFilterType(type)}

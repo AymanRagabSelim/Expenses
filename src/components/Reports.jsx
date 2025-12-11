@@ -8,6 +8,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 export const Reports = () => {
     const { expenses } = useData();
     const { selectedCurrency, convert, format } = useCurrency();
+    const [filterType, setFilterType] = useState('debit'); // Default to debit for expenses
     const [startDate, setStartDate] = useState(() => {
         const d = new Date();
         d.setMonth(d.getMonth() - 1);
@@ -16,13 +17,24 @@ export const Reports = () => {
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
     const filteredExpenses = useMemo(() => {
-        return expenses.filter(e => e.date >= startDate && e.date <= endDate);
-    }, [expenses, startDate, endDate]);
+        return expenses.filter(e => {
+            const dateMatch = e.date >= startDate && e.date <= endDate;
+            const type = e.type || 'debit';
+            const typeMatch = filterType === 'all' ? true : type === filterType;
+            return dateMatch && typeMatch;
+        });
+    }, [expenses, startDate, endDate, filterType]);
 
     const categoryData = useMemo(() => {
         const data = {};
         filteredExpenses.forEach(e => {
             const amount = convert(e.amount, e.currency, selectedCurrency);
+            // If viewing 'all', we might want to separate or net them, but for a pie chart by category, 
+            // usually we just sum up the absolute values or just sum them. 
+            // If type is credit, amount is income. If debit, expense.
+            // For a mixed report, simple sum might be misleading if we mix income and expense categories in one pie.
+            // However, based on user request "separate reports", the user will likely use the filter.
+            // We will just sum the values for the pie chart.
             data[e.category] = (data[e.category] || 0) + amount;
         });
         return Object.entries(data)
@@ -32,10 +44,32 @@ export const Reports = () => {
 
     const totalFiltered = categoryData.reduce((sum, item) => sum + item.value, 0);
 
+    const getReportTitle = () => {
+        if (filterType === 'debit') return 'Expenses by Category';
+        if (filterType === 'credit') return 'Income by Category';
+        return 'All Transactions by Category';
+    };
+
     return (
         <div className="space-y-6">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                 <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Reports</h2>
+
+                {/* Filter Tabs */}
+                <div className="flex bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg mb-6 max-w-md">
+                    {['debit', 'credit'].map((type) => (
+                        <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium capitalize transition-all ${filterType === type
+                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                }`}
+                        >
+                            {type === 'debit' ? 'Expenses' : type === 'credit' ? 'Income' : 'All'}
+                        </button>
+                    ))}
+                </div>
 
                 <div className="flex flex-wrap gap-4 mb-6">
                     <div>
@@ -60,7 +94,7 @@ export const Reports = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="h-[300px]">
-                        <h3 className="text-center font-medium mb-2 text-gray-700 dark:text-gray-300">Expenses by Category</h3>
+                        <h3 className="text-center font-medium mb-2 text-gray-700 dark:text-gray-300">{getReportTitle()}</h3>
                         {categoryData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -94,11 +128,11 @@ export const Reports = () => {
 
                         <div className="mt-6 w-full">
                             <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-300">Breakdown</h4>
-                            <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                                 {categoryData.map((item, index) => (
-                                    <div key={item.name} className="flex justify-between text-sm">
+                                    <div key={item.name} className="flex justify-between text-sm items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-600/50 rounded-md transition-colors">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
                                             <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
                                         </div>
                                         <span className="font-medium text-gray-800 dark:text-white">{format(item.value)}</span>
