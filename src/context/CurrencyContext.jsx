@@ -12,6 +12,10 @@ export const CurrencyProvider = ({ children }) => {
     const [selectedCurrency, setSelectedCurrency] = useState('OMR');
 
     const convert = (amount, fromCurrency, toCurrency) => {
+        if (!CURRENCIES[fromCurrency] || !CURRENCIES[toCurrency]) {
+            console.warn(`Currency conversion error: Unknown currency ${fromCurrency} or ${toCurrency}`);
+            return amount;
+        }
         if (fromCurrency === toCurrency) return amount;
         const amountInUSD = amount * CURRENCIES[fromCurrency].rateToUSD;
         const result = amountInUSD / CURRENCIES[toCurrency].rateToUSD;
@@ -19,10 +23,15 @@ export const CurrencyProvider = ({ children }) => {
     };
 
     const format = (amount, currency = selectedCurrency) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency,
-        }).format(amount);
+        try {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currency,
+            }).format(amount);
+        } catch (error) {
+            console.error(`Formatting error for currency ${currency}:`, error);
+            return `${currency} ${amount}`;
+        }
     };
 
     return (
