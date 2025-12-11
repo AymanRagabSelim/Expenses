@@ -71,6 +71,7 @@ export const DataProvider = ({ children }) => {
                     category: expense.category,
                     note: expense.note,
                     date: expense.date,
+                    type: expense.type,
                     user_id: user.id
                 }])
                 .select()
@@ -99,7 +100,8 @@ export const DataProvider = ({ children }) => {
                     currency: updatedExpense.currency,
                     category: updatedExpense.category,
                     note: updatedExpense.note,
-                    date: updatedExpense.date
+                    date: updatedExpense.date,
+                    type: updatedExpense.type
                 })
                 .eq('id', id);
 

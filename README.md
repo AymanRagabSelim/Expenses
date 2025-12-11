@@ -59,3 +59,7 @@ npm run dev
 <!-- publishing to prod by using
 Supabase (Cloud Database): This is where your DATA lives (your expenses, categories, user accounts). Think of it like a giant Excel sheet in the cloud that is secure and accessible from anywhere.
 Netlify (Host Server): This is where your WEBSITE lives (the HTML, CSS, and JavaScript code). It serves the actual webpage to your browser. -->
+
+<!-- Subbase DB
+amlayman3421@gmail.com -->
+<!-- Aml3421@AS -->

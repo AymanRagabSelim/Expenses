@@ -11,6 +11,7 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
     const [category, setCategory] = useState(categories[0] || 'Other');
     const [note, setNote] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [type, setType] = useState('debit');
     const [isNewCategory, setIsNewCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -21,8 +22,10 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
             setCategory(editingExpense.category);
             setNote(editingExpense.note || '');
             setDate(editingExpense.date);
+            setType(editingExpense.type || 'debit');
         } else {
             setCurrency(selectedCurrency);
+            setType('debit');
         }
     }, [editingExpense, selectedCurrency]);
 
@@ -42,6 +45,7 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
             category: finalCategory,
             note,
             date,
+            type
         };
 
         if (editingExpense) {
@@ -56,17 +60,41 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
         setIsNewCategory(false);
         setNewCategoryName('');
         setDate(new Date().toISOString().split('T')[0]);
+        setType('debit');
     };
 
     return (
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg space-y-4 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800 dark:text-white">{editingExpense ? 'Edit Expense' : 'Add Expense'}</h2>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white">{editingExpense ? 'Edit Transaction' : 'Add Transaction'}</h2>
                 {editingExpense && onCancelEdit && (
                     <button type="button" onClick={onCancelEdit} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                         <X size={20} />
                     </button>
                 )}
+            </div>
+
+            <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg mb-4">
+                <button
+                    type="button"
+                    onClick={() => setType('debit')}
+                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${type === 'debit'
+                            ? 'bg-white dark:bg-gray-600 text-red-600 shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        }`}
+                >
+                    Debit (Expense)
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setType('credit')}
+                    className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${type === 'credit'
+                            ? 'bg-white dark:bg-gray-600 text-green-600 shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        }`}
+                >
+                    Credit (Income)
+                </button>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -157,12 +185,13 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
 
             <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg"
+                className={`w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg ${type === 'credit' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                    }`}
             >
                 {editingExpense ? (
-                    <><Save size={20} /> Update Expense</>
+                    <><Save size={20} /> Update Transaction</>
                 ) : (
-                    <><Plus size={20} /> Add Expense</>
+                    <><Plus size={20} /> Add {type === 'credit' ? 'Income' : 'Expense'}</>
                 )}
             </button>
         </form>
