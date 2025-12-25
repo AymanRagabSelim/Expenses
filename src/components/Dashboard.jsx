@@ -4,6 +4,8 @@ import { useCurrency } from '../context/CurrencyContext';
 import { Trash2, Edit2 } from 'lucide-react';
 import { DataMigration } from './DataMigration';
 import { MultiSelect } from './MultiSelect';
+import { ChangePasswordModal } from './ChangePasswordModal';
+import { useAuth } from '../context/AuthContext';
 
 export const Dashboard = ({ onEdit }) => {
     const { expenses, deleteExpense } = useData();
@@ -40,11 +42,31 @@ export const Dashboard = ({ onEdit }) => {
         return 'Net Balance';
     };
 
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const { passwordRecoveryMode } = useAuth();
+
+    // Auto-open modal if recovering password
+    React.useEffect(() => {
+        if (passwordRecoveryMode) {
+            setIsPasswordModalOpen(true);
+        }
+    }, [passwordRecoveryMode]);
+
     return (
         <div className="space-y-6">
             <DataMigration />
+            <ChangePasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
+            />
 
-            <div className="flex flex-col sm:flex-row gap-4 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
+            <div className="flex flex-col sm:flex-row gap-4 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg relative">
+                {/* Optional: Add a small settings button somewhere, or keep it hidden until forced, 
+                    but adding a small 'Change Password' button at bottom of page is good practice. 
+                    For now, it auto-triggers on recovery. 
+                    Let's add a Trigger button in a new 'options' area or similar if desired.
+                    For simplicity/Request, I will add a small text button below the filters or in a corner.*/}
+
                 <div className="flex flex-1 bg-white dark:bg-gray-700 rounded-md p-1 shadow-sm">
                     {['debit', 'credit'].map((type) => (
                         <button

@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(false);
 
     useEffect(() => {
         // Check active sessions and sets the user
@@ -15,16 +16,26 @@ export const AuthProvider = ({ children }) => {
         });
 
         // Listen for changes on auth state (sign in, sign out, etc.)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             setUser(session?.user ?? null);
             setLoading(false);
+
+            if (event === 'PASSWORD_RECOVERY') {
+                setPasswordRecoveryMode(true);
+            }
         });
 
         return () => subscription.unsubscribe();
     }, []);
 
-    const signUp = (email, password) => {
-        return supabase.auth.signUp({ email, password });
+    const signUp = (email, password, options = {}) => {
+        return supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: options
+            }
+        });
     };
 
     const signIn = (email, password) => {
@@ -35,8 +46,18 @@ export const AuthProvider = ({ children }) => {
         return supabase.auth.signOut();
     };
 
+    const resetPassword = (email) => {
+        return supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin
+        });
+    };
+
+    const updatePassword = (newPassword) => {
+        return supabase.auth.updateUser({ password: newPassword });
+    };
+
     return (
-        <AuthContext.Provider value={{ user, signUp, signIn, signOut, loading }}>
+        <AuthContext.Provider value={{ user, signUp, signIn, signOut, resetPassword, updatePassword, passwordRecoveryMode, setPasswordRecoveryMode, loading }}>
             {children}
         </AuthContext.Provider>
     );

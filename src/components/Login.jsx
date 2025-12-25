@@ -3,10 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { LogIn, UserPlus, AlertCircle } from 'lucide-react';
 
 export const Login = () => {
-    const { signIn, signUp } = useAuth();
+    const { signIn, signUp, resetPassword } = useAuth();
     const [isLogin, setIsLogin] = useState(true);
+    const [isForgot, setIsForgot] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [displayName, setDisplayName] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -18,13 +20,17 @@ export const Login = () => {
         setLoading(true);
 
         try {
-            if (isLogin) {
+            if (isForgot) {
+                const { error } = await resetPassword(email);
+                if (error) throw error;
+                setMessage('Password reset email sent! Check your inbox.');
+            } else if (isLogin) {
                 const { error } = await signIn(email, password);
                 if (error) throw error;
             } else {
-                const { error } = await signUp(email, password);
+                const { error } = await signUp(email, password, { display_name: displayName });
                 if (error) throw error;
-                setMessage('Check your email for the confirmation link!');
+                setMessage('Registration successful! Check your email for the confirmation link.');
             }
         } catch (err) {
             setError(err.message);
@@ -41,7 +47,7 @@ export const Login = () => {
                         ExpenseTracker
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400">
-                        {isLogin ? 'Welcome back!' : 'Create an account to get started'}
+                        {isForgot ? 'Reset your password' : isLogin ? 'Welcome back!' : 'Create an account to get started'}
                     </p>
                 </div>
 
@@ -59,6 +65,18 @@ export const Login = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {!isLogin && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display Name</label>
+                            <input
+                                type="text"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all"
+                                placeholder="e.g. John Doe"
+                            />
+                        </div>
+                    )}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                         <input
@@ -69,35 +87,60 @@ export const Login = () => {
                             required
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all"
-                            required
-                            minLength={6}
-                        />
-                    </div>
+                    {/* Password Field - Hide if in Forgot Password mode */}
+                    {!isForgot && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all"
+                                required
+                                minLength={6}
+                            />
+                            {isLogin && (
+                                <div className="text-right mt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsForgot(true)}
+                                        className="text-xs text-blue-600 hover:text-blue-800"
+                                    >
+                                        Forgot Password?
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <button
                         type="submit"
                         disabled={loading}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? 'Processing...' : isLogin ? <><LogIn size={20} /> Sign In</> : <><UserPlus size={20} /> Sign Up</>}
+                        {loading ? 'Processing...' : isForgot ? 'Send Reset Link' : isLogin ? <><LogIn size={20} /> Sign In</> : <><UserPlus size={20} /> Sign Up</>}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                    {isLogin ? "Don't have an account? " : "Already have an account? "}
-                    <button
-                        onClick={() => setIsLogin(!isLogin)}
-                        className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
-                    >
-                        {isLogin ? 'Sign Up' : 'Sign In'}
-                    </button>
+                    {isForgot ? (
+                        <button
+                            onClick={() => { setIsForgot(false); setIsLogin(true); setMessage(''); }}
+                            className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                        >
+                            Back to Sign In
+                        </button>
+                    ) : (
+                        <>
+                            {isLogin ? "Don't have an account? " : "Already have an account? "}
+                            <button
+                                onClick={() => setIsLogin(!isLogin)}
+                                className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                            >
+                                {isLogin ? 'Sign Up' : 'Sign In'}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

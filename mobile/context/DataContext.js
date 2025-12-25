@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { Alert } from 'react-native';
 
 const DataContext = createContext();
 
@@ -69,7 +70,7 @@ export const DataProvider = ({ children }) => {
                 .from('expenses')
                 .insert([{
                     amount: expense.amount,
-                    currency: expense.currency,
+                    currency: expense.currency || 'USD',
                     category: expense.category,
                     note: expense.note,
                     date: expense.date,
@@ -85,6 +86,7 @@ export const DataProvider = ({ children }) => {
             setExpenses(prev => prev.map(e => e.id === tempId ? data : e));
         } catch (error) {
             console.error('Error adding expense:', error.message);
+            Alert.alert('Error', 'Failed to save expense');
             // Revert optimistic update on error
             fetchExpenses();
         }
@@ -110,6 +112,7 @@ export const DataProvider = ({ children }) => {
             if (error) throw error;
         } catch (error) {
             console.error('Error updating expense:', error.message);
+            Alert.alert('Error', 'Failed to update expense');
             fetchExpenses();
         }
     };
@@ -127,6 +130,7 @@ export const DataProvider = ({ children }) => {
             if (error) throw error;
         } catch (error) {
             console.error('Error deleting expense:', error.message);
+            Alert.alert('Error', 'Failed to delete expense');
             fetchExpenses();
         }
     };
