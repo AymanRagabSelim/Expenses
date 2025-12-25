@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Modal, TextInput, ScrollView, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,6 +9,8 @@ const AddExpenseModal = ({ isOpen, onClose, categories, onSave }) => {
     const [category, setCategory] = useState((categories || [])[0] || 'Other');
     const [note, setNote] = useState('');
     const [type, setType] = useState('debit');
+    const [date, setDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const handleSave = () => {
         const numAmount = parseFloat(amount);
@@ -17,19 +20,34 @@ const AddExpenseModal = ({ isOpen, onClose, categories, onSave }) => {
             category: category || 'Other',
             note: note || '',
             type: type || 'debit',
-            date: new Date().toISOString().split('T')[0],
+            date: date.toISOString().split('T')[0],
             currency: 'USD'
         });
         setAmount('');
         setNote('');
+        setDate(new Date());
         onClose();
     };
 
+    const onDateChange = (event, selectedDate) => {
+        const currentDate = selectedDate || date;
+        setShowDatePicker(Platform.OS === 'ios');
+        setDate(currentDate);
+    };
+
     return (
-        <Modal visible={isOpen} animationType="slide" transparent={true} onRequestClose={onClose}>
+        <Modal
+            visible={Boolean(isOpen === true)}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={onClose}
+        >
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>Add Transaction</Text>
+                    <View style={styles.modalHeader}>
+                        <View style={styles.modalHandle} />
+                        <Text style={styles.modalTitle}>Add Transaction</Text>
+                    </View>
 
                     <View style={styles.typeSelector}>
                         <TouchableOpacity onPress={() => setType('debit')} style={[styles.typeBtn, type === 'debit' && styles.typeBtnActiveDeb]}>
@@ -54,9 +72,22 @@ const AddExpenseModal = ({ isOpen, onClose, categories, onSave }) => {
                         onChangeText={setNote}
                     />
 
+                    <TouchableOpacity style={styles.datePickerBtn} onPress={() => setShowDatePicker(true)}>
+                        <Text style={styles.label}>Date: {date.toISOString().split('T')[0]}</Text>
+                    </TouchableOpacity>
+
+                    {showDatePicker && (
+                        <DateTimePicker
+                            value={date}
+                            mode="date"
+                            display="default"
+                            onChange={onDateChange}
+                        />
+                    )}
+
                     <Text style={styles.label}>Category</Text>
-                    <View style={{ height: 50 }}>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
+                    <View style={styles.categoryContainer}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                             {(categories || []).map(c => (
                                 <TouchableOpacity
                                     key={c}
@@ -85,25 +116,46 @@ const AddExpenseModal = ({ isOpen, onClose, categories, onSave }) => {
 
 export default function DashboardScreen() {
     const data = useData() || {};
-    const { expenses = [], categories = [], addExpense = () => { }, deleteExpense = () => { } } = data;
+    const { expenses = [], categories = [], addExpense = () => { } } = data;
     const { signOut } = useAuth() || {};
 
-    const [filterType, setFilterType] = useState('debit'); // all, debit, credit
+    const [filterType, setFilterType] = useState('all');
+    const [filterCategory, setFilterCategory] = useState('All');
+    const [filterDateRange, setFilterDateRange] = useState('All'); // Today, Week, Month, All
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    // Calc Total
-    const total = (expenses || [])
-        .filter(e => filterType === 'all' || (e.type || 'debit') === filterType)
-        .reduce((sum, e) => {
-            const amount = parseFloat(e.amount) || 0;
-            const type = e.type || 'debit';
-            if (filterType === 'all') {
-                return type === 'credit' ? sum + amount : sum - amount;
-            }
-            return sum + amount;
-        }, 0);
+    const filterByDate = (date) => {
+        if (filterDateRange === 'All') return true;
+        const d = new Date(date);
+        const now = new Date();
+        if (filterDateRange === 'Today') {
+            return d.toDateString() === now.toDateString();
+        }
+        if (filterDateRange === 'Week') {
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return d >= weekAgo;
+        }
+        if (filterDateRange === 'Month') {
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }
+        return true;
+    };
 
-    const filteredExpenses = (expenses || []).filter(e => filterType === 'all' || (e.type || 'debit') === filterType);
+    const filteredExpenses = (expenses || []).filter(e => {
+        const matchType = filterType === 'all' || (e.type || 'debit') === filterType;
+        const matchCat = filterCategory === 'All' || e.category === filterCategory;
+        const matchDate = filterByDate(e.date);
+        return matchType && matchCat && matchDate;
+    });
+
+    const total = filteredExpenses.reduce((sum, e) => {
+        const amount = parseFloat(e.amount) || 0;
+        const type = e.type || 'debit';
+        if (filterType === 'all') {
+            return type === 'credit' ? sum + amount : sum - amount;
+        }
+        return sum + amount;
+    }, 0);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -113,6 +165,18 @@ export default function DashboardScreen() {
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
             </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.topFilterScroll}>
+                {['All', 'Today', 'Week', 'Month'].map(d => (
+                    <TouchableOpacity
+                        key={d}
+                        onPress={() => setFilterDateRange(d)}
+                        style={[styles.smallChip, filterDateRange === d && styles.smallChipActive]}
+                    >
+                        <Text style={[styles.smallChipText, filterDateRange === d && styles.smallChipTextActive]}>{d}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
 
             <View style={styles.card}>
                 <Text style={styles.cardLabel}>{filterType === 'all' ? 'Net Balance' : filterType === 'credit' ? 'Total Income' : 'Total Expenses'}</Text>
@@ -126,11 +190,25 @@ export default function DashboardScreen() {
                             style={[styles.filterBtn, filterType === t && styles.filterBtnActive]}
                         >
                             <Text style={[styles.filterText, filterType === t && styles.filterTextActive]}>
-                                {t.charAt(0).toUpperCase() + t.slice(1)}
+                                {t === 'debit' ? 'Expense' : t === 'credit' ? 'Income' : 'All'}
                             </Text>
                         </TouchableOpacity>
                     ))}
                 </View>
+            </View>
+
+            <View style={styles.catFilterContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {['All', ...categories].map(c => (
+                        <TouchableOpacity
+                            key={c}
+                            onPress={() => setFilterCategory(c)}
+                            style={[styles.catChip, filterCategory === c && styles.catChipActive, { height: 36 }]}
+                        >
+                            <Text style={[styles.catText, filterCategory === c && styles.catTextActive]}>{c}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
             </View>
 
             <View style={styles.listHeader}>
@@ -166,7 +244,7 @@ export default function DashboardScreen() {
             />
 
             <AddExpenseModal
-                isOpen={isAddModalOpen}
+                isOpen={Boolean(isAddModalOpen === true)}
                 onClose={() => setIsAddModalOpen(false)}
                 categories={categories}
                 onSave={addExpense}
@@ -178,7 +256,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#f9fafb',
     },
     header: {
         flexDirection: 'row',
@@ -194,6 +272,29 @@ const styles = StyleSheet.create({
     logoutText: {
         color: '#ef4444',
         fontWeight: '600',
+    },
+    topFilterScroll: {
+        paddingHorizontal: 20,
+        marginBottom: 10,
+        maxHeight: 40,
+    },
+    smallChip: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: '#f3f4f6',
+        marginRight: 8,
+    },
+    smallChipActive: {
+        backgroundColor: '#2563eb',
+    },
+    smallChipText: {
+        fontSize: 12,
+        color: '#6b7280',
+        fontWeight: '600',
+    },
+    smallChipTextActive: {
+        color: 'white',
     },
     card: {
         backgroundColor: '#2563eb',
@@ -236,6 +337,10 @@ const styles = StyleSheet.create({
     },
     filterTextActive: {
         color: '#2563eb',
+    },
+    catFilterContainer: {
+        paddingHorizontal: 20,
+        marginBottom: 20,
     },
     listHeader: {
         flexDirection: 'row',
@@ -309,19 +414,36 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
-        maxHeight: '80%',
+        maxHeight: '85%',
+    },
+    modalHeader: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#e5e7eb',
+        borderRadius: 2,
+        marginBottom: 12,
     },
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
+        color: '#111827',
     },
     input: {
         backgroundColor: '#f3f4f6',
         padding: 16,
         borderRadius: 12,
         fontSize: 16,
+        marginBottom: 16,
+        color: '#111827',
+    },
+    datePickerBtn: {
+        backgroundColor: '#f3f4f6',
+        padding: 16,
+        borderRadius: 12,
         marginBottom: 16,
     },
     typeSelector: {
@@ -355,32 +477,35 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        marginBottom: 8,
+        marginBottom: 12,
         color: '#374151',
     },
-    catScroll: {
-        marginBottom: 20,
+    categoryContainer: {
+        height: 50,
+        marginBottom: 24,
     },
     catChip: {
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: 10,
         borderRadius: 20,
         backgroundColor: '#f3f4f6',
-        marginRight: 8,
+        marginRight: 10,
+        justifyContent: 'center',
     },
     catChipActive: {
         backgroundColor: '#2563eb',
     },
     catText: {
         color: '#374151',
-        fontWeight: '500',
+        fontWeight: '600',
+        fontSize: 14,
     },
     catTextActive: {
         color: 'white',
     },
     modalButtons: {
         flexDirection: 'row',
-        marginTop: 20,
+        marginTop: 10,
     },
     cancelBtn: {
         flex: 1,
