@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { MultiSelect } from './MultiSelect';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ff7300', '#d0ed57'];
 
@@ -9,6 +10,11 @@ export const Reports = () => {
     const { expenses } = useData();
     const { selectedCurrency, convert, format } = useCurrency();
     const [filterType, setFilterType] = useState('debit'); // Default to debit for expenses
+    const [categoryFilter, setCategoryFilter] = useState([]);
+
+    // Get unique categories
+    const categories = ['all', ...new Set(expenses.map(e => e.category))].filter(Boolean);
+
     const [startDate, setStartDate] = useState(() => {
         const d = new Date();
         d.setMonth(d.getMonth() - 1);
@@ -21,9 +27,10 @@ export const Reports = () => {
             const dateMatch = e.date >= startDate && e.date <= endDate;
             const type = e.type || 'debit';
             const typeMatch = filterType === 'all' ? true : type === filterType;
-            return dateMatch && typeMatch;
+            const categoryMatch = categoryFilter.length === 0 || categoryFilter.includes(e.category);
+            return dateMatch && typeMatch && categoryMatch;
         });
-    }, [expenses, startDate, endDate, filterType]);
+    }, [expenses, startDate, endDate, filterType, categoryFilter]);
 
     const categoryData = useMemo(() => {
         const data = {};
@@ -56,19 +63,30 @@ export const Reports = () => {
                 <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Reports</h2>
 
                 {/* Filter Tabs */}
-                <div className="flex bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg mb-6 max-w-md">
-                    {['debit', 'credit'].map((type) => (
-                        <button
-                            key={type}
-                            onClick={() => setFilterType(type)}
-                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium capitalize transition-all ${filterType === type
-                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                                }`}
-                        >
-                            {type === 'debit' ? 'Expenses' : type === 'credit' ? 'Income' : 'All'}
-                        </button>
-                    ))}
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="flex flex-1 bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg">
+                        {['debit', 'credit'].map((type) => (
+                            <button
+                                key={type}
+                                onClick={() => setFilterType(type)}
+                                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium capitalize transition-all ${filterType === type
+                                    ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                            >
+                                {type === 'debit' ? 'Expenses' : type === 'credit' ? 'Income' : 'All'}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex-1 min-w-[200px]">
+                        <MultiSelect
+                            options={categories.filter(c => c !== 'all')}
+                            selected={categoryFilter}
+                            onChange={setCategoryFilter}
+                            placeholder="All Categories"
+                        />
+                    </div>
                 </div>
 
                 <div className="flex flex-wrap gap-4 mb-6">

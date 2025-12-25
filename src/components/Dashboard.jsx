@@ -3,19 +3,29 @@ import { useData } from '../context/DataContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { Trash2, Edit2 } from 'lucide-react';
 import { DataMigration } from './DataMigration';
+import { MultiSelect } from './MultiSelect';
 
 export const Dashboard = ({ onEdit }) => {
     const { expenses, deleteExpense } = useData();
     const { selectedCurrency, convert, format } = useCurrency();
     const [filterType, setFilterType] = useState('debit'); // all, debit, credit
+    const [categoryFilter, setCategoryFilter] = useState([]);
+
+    // Get unique categories from expenses
+    const categories = ['all', ...new Set(expenses.map(e => e.category))].filter(Boolean);
 
     const filteredExpenses = expenses.filter(expense => {
-        if (filterType === 'all') return true;
-        return (expense.type || 'debit') === filterType; // Default to debit for backward compatibility
+        const matchesType = filterType === 'all' || (expense.type || 'debit') === filterType;
+        const matchesCategory = categoryFilter.length === 0 || categoryFilter.includes(expense.category);
+        return matchesType && matchesCategory;
     });
 
     const total = filteredExpenses.reduce((sum, expense) => {
         const amount = convert(expense.amount, expense.currency, selectedCurrency);
+        // We only sum up the filtered expenses now, which already respect the Type filter (if active)
+        // If filterType is 'all', we need to handle credits as positive and debits as negative for Net Balance
+        // If filterType is 'debit' or 'credit', we just sum the magnitudes because the list is already filtered by type.
+
         const type = expense.type || 'debit';
 
         if (filterType === 'all') {
@@ -34,19 +44,30 @@ export const Dashboard = ({ onEdit }) => {
         <div className="space-y-6">
             <DataMigration />
 
-            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                {['debit', 'credit'].map((type) => (
-                    <button
-                        key={type}
-                        onClick={() => setFilterType(type)}
-                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium capitalize transition-all ${filterType === type
-                            ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                            }`}
-                    >
-                        {type}
-                    </button>
-                ))}
+            <div className="flex flex-col sm:flex-row gap-4 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
+                <div className="flex flex-1 bg-white dark:bg-gray-700 rounded-md p-1 shadow-sm">
+                    {['debit', 'credit'].map((type) => (
+                        <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            className={`flex-1 py-1.5 px-4 rounded-md text-sm font-medium capitalize transition-all ${filterType === type
+                                ? 'bg-gray-100 dark:bg-gray-600 text-blue-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                }`}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                    <MultiSelect
+                        options={categories.filter(c => c !== 'all')}
+                        selected={categoryFilter}
+                        onChange={setCategoryFilter}
+                        placeholder="All Categories"
+                    />
+                </div>
             </div>
 
             <div className={`rounded-xl p-6 text-white shadow-lg ${filterType === 'credit' ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
