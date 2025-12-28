@@ -46,6 +46,7 @@ const AddExpenseModal = ({ isOpen, onClose, categories, onSave }) => {
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.modalOverlay}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
             >
                 <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
