@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import LoginScreen from './screens/LoginScreen';
 import DashboardScreen from './screens/DashboardScreen';
 import ReportsScreen from './screens/ReportsScreen';
 
-// Custom Tab Switcher to bypass React Navigation bug in RN 0.81 Fabric renderer
 function MainApp() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -16,8 +16,8 @@ function MainApp() {
         {activeTab === 'dashboard' ? <DashboardScreen /> : <ReportsScreen />}
       </View>
 
-      {/* Custom Bottom Tab Bar */}
-      <SafeAreaView style={styles.tabBarContainer}>
+      {/* Custom Bottom Tab Bar - Avoiding React Navigation string/bool bug */}
+      <SafeAreaView edges={['bottom']} style={styles.tabBarContainer}>
         <View style={styles.tabBar}>
           <TouchableOpacity
             onPress={() => setActiveTab('dashboard')}
@@ -42,14 +42,14 @@ function AppContent() {
   const auth = useAuth() || {};
   const { user = null, loading = true } = auth;
 
-  // Strict boolean casting for RN 0.81 stability
+  // Strict boolean casting for RN 0.81/Fabric stability
   const isSyncing = Boolean(loading === true);
   const isLoggedIn = Boolean(user !== null);
 
   if (isSyncing === true) {
     return (
       <View style={styles.center}>
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>Syncing Account...</Text>
       </View>
     );
   }
@@ -63,11 +63,13 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <DataProvider>
-        <AppContent />
-      </DataProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <DataProvider>
+          <AppContent />
+        </DataProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -96,6 +98,7 @@ const styles = StyleSheet.create({
   tabItem: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 10,
   },
   tabItemActive: {

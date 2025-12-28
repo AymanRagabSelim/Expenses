@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Dimensions, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { PieChart, BarChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useData } from '../context/DataContext';
