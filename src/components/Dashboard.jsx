@@ -12,14 +12,51 @@ export const Dashboard = ({ onEdit }) => {
     const { selectedCurrency, convert, format } = useCurrency();
     const [filterType, setFilterType] = useState('debit'); // all, debit, credit
     const [categoryFilter, setCategoryFilter] = useState([]);
+    const [filterDateRange, setFilterDateRange] = useState('Month'); // Today, Week, Month, All
 
     // Get unique categories from expenses
     const categories = ['all', ...new Set(expenses.map(e => e.category))].filter(Boolean);
 
+    const filterByDate = (date) => {
+        if (filterDateRange === 'All') return true;
+        const d = new Date(date);
+        const now = new Date();
+
+        if (filterDateRange === 'Today') {
+            return d.toDateString() === now.toDateString();
+        }
+        if (filterDateRange === 'Week') {
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return d >= weekAgo;
+        }
+        if (filterDateRange === 'Month') {
+            const currentDay = now.getDate();
+            let start, end;
+            if (currentDay >= 23) {
+                // Current cycle started this month on the 23rd
+                start = new Date(now.getFullYear(), now.getMonth(), 23);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 23);
+            } else {
+                // Current cycle started last month on the 23rd
+                start = new Date(now.getFullYear(), now.getMonth() - 1, 23);
+                end = new Date(now.getFullYear(), now.getMonth(), 23);
+            }
+            // Normalize d to start of day for comparison if string is just YYYY-MM-DD
+            // But usually e.date is YYYY-MM-DD string. New Date(YYYY-MM-DD) is UTC midnight.
+            // Let's rely on time comparison.
+            const dTime = d.getTime();
+            const startTime = start.setHours(0, 0, 0, 0);
+            const endTime = end.setHours(0, 0, 0, 0);
+            return dTime >= startTime && dTime < endTime;
+        }
+        return true;
+    };
+
     const filteredExpenses = expenses.filter(expense => {
         const matchesType = filterType === 'all' || (expense.type || 'debit') === filterType;
         const matchesCategory = categoryFilter.length === 0 || categoryFilter.includes(expense.category);
-        return matchesType && matchesCategory;
+        const matchesDate = filterByDate(expense.date);
+        return matchesType && matchesCategory && matchesDate;
     });
 
     const total = filteredExpenses.reduce((sum, expense) => {
@@ -67,19 +104,38 @@ export const Dashboard = ({ onEdit }) => {
                     Let's add a Trigger button in a new 'options' area or similar if desired.
                     For simplicity/Request, I will add a small text button below the filters or in a corner.*/}
 
-                <div className="flex flex-1 bg-white dark:bg-gray-700 rounded-md p-1 shadow-sm">
-                    {['debit', 'credit'].map((type) => (
-                        <button
-                            key={type}
-                            onClick={() => setFilterType(type)}
-                            className={`flex-1 py-1.5 px-4 rounded-md text-sm font-medium capitalize transition-all ${filterType === type
-                                ? 'bg-gray-100 dark:bg-gray-600 text-blue-600 shadow-sm'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                                }`}
-                        >
-                            {type}
-                        </button>
-                    ))}
+                <div className="flex flex-col gap-2 flex-1">
+                    {/* Date Filters */}
+                    <div className="flex bg-white dark:bg-gray-700 rounded-md p-1 shadow-sm">
+                        {['All', 'Today', 'Week', 'Month'].map((range) => (
+                            <button
+                                key={range}
+                                onClick={() => setFilterDateRange(range)}
+                                className={`flex-1 py-1 px-3 rounded-md text-xs font-medium transition-all ${filterDateRange === range
+                                    ? 'bg-blue-50 dark:bg-gray-600 text-blue-600 shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                            >
+                                {range}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Type Filters */}
+                    <div className="flex bg-white dark:bg-gray-700 rounded-md p-1 shadow-sm">
+                        {['debit', 'credit'].map((type) => (
+                            <button
+                                key={type}
+                                onClick={() => setFilterType(type)}
+                                className={`flex-1 py-1.5 px-4 rounded-md text-sm font-medium capitalize transition-all ${filterType === type
+                                    ? 'bg-gray-100 dark:bg-gray-600 text-blue-600 shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                            >
+                                {type}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="flex-1 min-w-[200px]">

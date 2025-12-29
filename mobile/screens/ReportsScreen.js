@@ -9,8 +9,17 @@ const { width } = Dimensions.get('window');
 
 export default function ReportsScreen() {
     const { expenses, categories } = useData();
+    const getInitialMonth = () => {
+        const now = new Date();
+        // If before 23rd, show previous month's cycle
+        if (now.getDate() < 23) {
+            return (now.getMonth() - 1 + 12) % 12;
+        }
+        return now.getMonth();
+    };
+
     const [filterMode, setFilterMode] = useState('month'); // 'month' or 'custom'
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedMonth, setSelectedMonth] = useState(getInitialMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
     // Custom range states
@@ -26,7 +35,14 @@ export default function ReportsScreen() {
     const filteredExpenses = safeExpenses.filter(e => {
         const d = new Date(e.date);
         if (filterMode === 'month') {
-            return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+            const start = new Date(selectedYear, selectedMonth, 23);
+            const end = new Date(selectedYear, selectedMonth + 1, 23);
+            const dTime = d.getTime();
+            // Reset hours for accurate comparison
+            const startTime = start.setHours(0, 0, 0, 0);
+            const endTime = end.setHours(0, 0, 0, 0);
+
+            return dTime >= startTime && dTime < endTime;
         } else {
             // Custom range: normalize dates to midnight for comparison
             const checkDate = new Date(e.date).setHours(0, 0, 0, 0);
@@ -58,8 +74,16 @@ export default function ReportsScreen() {
                 labels: months,
                 datasets: [{
                     data: months.map((m, i) => {
+                        const start = new Date(selectedYear, i, 23);
+                        const end = new Date(selectedYear, i + 1, 23);
+                        const startTime = start.setHours(0, 0, 0, 0);
+                        const endTime = end.setHours(0, 0, 0, 0);
+
                         return safeExpenses
-                            .filter(e => new Date(e.date).getMonth() === i && new Date(e.date).getFullYear() === selectedYear && (e.type || 'debit') === 'debit')
+                            .filter(e => {
+                                const dTime = new Date(e.date).getTime();
+                                return dTime >= startTime && dTime < endTime && (e.type || 'debit') === 'debit';
+                            })
                             .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
                     })
                 }]
@@ -71,8 +95,16 @@ export default function ReportsScreen() {
             labels: months,
             datasets: [{
                 data: months.map((m, i) => {
+                    const start = new Date(new Date().getFullYear(), i, 23);
+                    const end = new Date(new Date().getFullYear(), i + 1, 23);
+                    const startTime = start.setHours(0, 0, 0, 0);
+                    const endTime = end.setHours(0, 0, 0, 0);
+
                     return safeExpenses
-                        .filter(e => new Date(e.date).getMonth() === i && new Date(e.date).getFullYear() === new Date().getFullYear() && (e.type || 'debit') === 'debit')
+                        .filter(e => {
+                            const dTime = new Date(e.date).getTime();
+                            return dTime >= startTime && dTime < endTime && (e.type || 'debit') === 'debit';
+                        })
                         .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
                 })
             }]

@@ -126,7 +126,7 @@ export default function DashboardScreen() {
 
     const [filterType, setFilterType] = useState('all');
     const [filterCategory, setFilterCategory] = useState('All');
-    const [filterDateRange, setFilterDateRange] = useState('All'); // Today, Week, Month, All
+    const [filterDateRange, setFilterDateRange] = useState('Month'); // Today, Week, Month, All
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const filterByDate = (date) => {
@@ -141,7 +141,25 @@ export default function DashboardScreen() {
             return d >= weekAgo;
         }
         if (filterDateRange === 'Month') {
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            const now = new Date();
+            const currentDay = now.getDate();
+            let start, end;
+
+            if (currentDay >= 23) {
+                // Current cycle started this month on the 23rd
+                start = new Date(now.getFullYear(), now.getMonth(), 23);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 23);
+            } else {
+                // Current cycle started last month on the 23rd
+                start = new Date(now.getFullYear(), now.getMonth() - 1, 23);
+                end = new Date(now.getFullYear(), now.getMonth(), 23);
+            }
+            // Reset hours for accurate comparison if d includes time
+            const dTime = d.getTime();
+            const startTime = start.setHours(0, 0, 0, 0);
+            const endTime = end.setHours(0, 0, 0, 0);
+
+            return dTime >= startTime && dTime < endTime;
         }
         return true;
     };
