@@ -31,7 +31,14 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password });
-    const signUp = (email, password, options) => supabase.auth.signUp({ email, password, options: { data: options } });
+    const signUp = (email, password, options) => supabase.auth.signUp({
+        email,
+        password,
+        options: {
+            data: options,
+            emailRedirectTo: 'expenses://'
+        }
+    });
     const signOut = () => supabase.auth.signOut();
     const resetPassword = (email) => supabase.auth.resetPasswordForEmail(email);
 

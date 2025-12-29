@@ -4,6 +4,7 @@
     "slug": "expense-tracker-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "scheme": "expenses",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
