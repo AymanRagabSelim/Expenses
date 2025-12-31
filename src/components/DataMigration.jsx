@@ -91,6 +91,17 @@ export const DataMigration = () => {
 
     if (status === 'success') return null; // Hide after success
 
+    // Only show if there's actually local data
+    const localExpensesStr = localStorage.getItem('expenses_data');
+    const localCategoriesStr = localStorage.getItem('categories_data');
+
+    if (!localExpensesStr && !localCategoriesStr) return null;
+
+    const localExpenses = localExpensesStr ? JSON.parse(localExpensesStr) : [];
+    const localCategories = localCategoriesStr ? JSON.parse(localCategoriesStr) : [];
+
+    if (localExpenses.length === 0 && localCategories.length === 0) return null;
+
     return (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
