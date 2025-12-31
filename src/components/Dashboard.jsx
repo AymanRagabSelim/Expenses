@@ -12,8 +12,21 @@ export const Dashboard = ({ onEdit }) => {
     const { selectedCurrency, convert, format } = useCurrency();
     const [filterType, setFilterType] = useState('debit'); // all, debit, credit
     const [categoryFilter, setCategoryFilter] = useState([]);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+
+    const getDefaultDates = () => {
+        const now = new Date();
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 25);
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 25);
+
+        return {
+            start: startDate.toISOString().split('T')[0],
+            end: endDate.toISOString().split('T')[0]
+        };
+    };
+
+    const defaultDates = getDefaultDates();
+    const [startDate, setStartDate] = useState(defaultDates.start);
+    const [endDate, setEndDate] = useState(defaultDates.end);
 
     // Get unique categories from expenses
     const categories = ['all', ...new Set(expenses.map(e => e.category))].filter(Boolean);
