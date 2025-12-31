@@ -14,6 +14,7 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
     const [type, setType] = useState('debit');
     const [isNewCategory, setIsNewCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
 
     useEffect(() => {
         if (editingExpense) {
@@ -61,6 +62,8 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
         setNewCategoryName('');
         setDate(new Date().toISOString().split('T')[0]);
         setType('debit');
+        setSuccessMsg(editingExpense ? 'Transaction updated!' : 'Transaction added successfully!');
+        setTimeout(() => setSuccessMsg(''), 3000);
     };
 
     return (
@@ -79,8 +82,8 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
                     type="button"
                     onClick={() => setType('debit')}
                     className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${type === 'debit'
-                            ? 'bg-white dark:bg-gray-600 text-red-600 shadow-sm'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        ? 'bg-white dark:bg-gray-600 text-red-600 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                         }`}
                 >
                     Debit (Expense)
@@ -89,8 +92,8 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
                     type="button"
                     onClick={() => setType('credit')}
                     className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-all ${type === 'credit'
-                            ? 'bg-white dark:bg-gray-600 text-green-600 shadow-sm'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        ? 'bg-white dark:bg-gray-600 text-green-600 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                         }`}
                 >
                     Credit (Income)
@@ -183,6 +186,12 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
                 />
             </div>
 
+            {successMsg && (
+                <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 p-3 rounded-md text-center text-sm font-medium animate-fade-in">
+                    {successMsg}
+                </div>
+            )}
+
             <button
                 type="submit"
                 className={`w-full text-white font-bold py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg ${type === 'credit' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
@@ -194,6 +203,6 @@ export const ExpenseForm = ({ editingExpense, onCancelEdit }) => {
                     <><Plus size={20} /> Add {type === 'credit' ? 'Income' : 'Expense'}</>
                 )}
             </button>
-        </form>
+        </form >
     );
 };

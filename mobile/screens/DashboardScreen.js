@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ScrollView, Platform, KeyboardAvoidingView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useData } from '../context/DataContext';
@@ -27,7 +27,9 @@ const AddExpenseModal = ({ isOpen, onClose, categories, onSave }) => {
         setAmount('');
         setNote('');
         setDate(new Date());
-        onClose();
+        Alert.alert('Success', 'Transaction added successfully', [
+            { text: 'OK', onPress: onClose }
+        ]);
     };
 
     const onDateChange = (event, selectedDate) => {
