@@ -28,6 +28,22 @@ export const Dashboard = ({ onEdit }) => {
     const [startDate, setStartDate] = useState(defaultDates.start);
     const [endDate, setEndDate] = useState(defaultDates.end);
 
+    const setToSalaryMonth = () => {
+        const now = new Date();
+        const currentDay = now.getDate();
+        let start, end;
+        if (currentDay >= 23) {
+            start = new Date(now.getFullYear(), now.getMonth(), 23);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 23);
+        } else {
+            start = new Date(now.getFullYear(), now.getMonth() - 1, 23);
+            end = new Date(now.getFullYear(), now.getMonth(), 23);
+        }
+        end.setDate(end.getDate() - 1);
+        setStartDate(start.toISOString().split('T')[0]);
+        setEndDate(end.toISOString().split('T')[0]);
+    };
+
     // Get unique categories from expenses
     const categories = ['all', ...new Set(expenses.map(e => e.category))].filter(Boolean);
 
@@ -117,6 +133,14 @@ export const Dashboard = ({ onEdit }) => {
                                 className="w-full p-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                             />
                         </div>
+                    </div>
+                    <div className="flex justify-end">
+                        <button
+                            onClick={setToSalaryMonth}
+                            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline"
+                        >
+                            Set to Current Salary Month (23rd-22nd)
+                        </button>
                     </div>
 
                     {/* Type Filters */}
