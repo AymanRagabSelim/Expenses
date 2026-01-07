@@ -26,22 +26,13 @@ export const Reports = () => {
         const now = new Date();
         const currentDay = now.getDate();
         let start, end;
-        if (currentDay >= 23) {
-            start = new Date(now.getFullYear(), now.getMonth(), 23);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 23);
+        if (currentDay >= 24) {
+            start = new Date(now.getFullYear(), now.getMonth(), 24);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 24);
         } else {
-            start = new Date(now.getFullYear(), now.getMonth() - 1, 23);
-            end = new Date(now.getFullYear(), now.getMonth(), 23);
+            start = new Date(now.getFullYear(), now.getMonth() - 1, 24);
+            end = new Date(now.getFullYear(), now.getMonth(), 24);
         }
-        // end date in range filter is inclusive, but usually we mean *until* the 23rd.
-        // If the cycle is 23rd to 22nd, then end date should be 23rd (exclusive) or 22nd (inclusive).
-        // In the mobile app, we did: return dTime >= startTime && dTime < endTime;
-        // In this component, the filter logic is: e.date >= startDate && e.date <= endDate;
-        // So we should set endDate to the 22nd, or implement inclusive check carefully.
-        // Let's set end date to the 23rd for simplicity, understanding that <= matches it.
-        // Actually, strictly speaking, 23rd is the start of NEXT month. So end date should be 22nd?
-        // Let's subtract 1 day from end to get the 22nd.
-        end.setDate(end.getDate() - 1);
 
         setStartDate(start.toISOString().split('T')[0]);
         setEndDate(end.toISOString().split('T')[0]);

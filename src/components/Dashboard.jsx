@@ -15,8 +15,8 @@ export const Dashboard = ({ onEdit }) => {
 
     const getDefaultDates = () => {
         const now = new Date();
-        const startDate = new Date(now.getFullYear(), now.getMonth(), 25);
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 25);
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 24);
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 24);
 
         return {
             start: startDate.toISOString().split('T')[0],
@@ -32,14 +32,13 @@ export const Dashboard = ({ onEdit }) => {
         const now = new Date();
         const currentDay = now.getDate();
         let start, end;
-        if (currentDay >= 23) {
-            start = new Date(now.getFullYear(), now.getMonth(), 23);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 23);
+        if (currentDay >= 24) {
+            start = new Date(now.getFullYear(), now.getMonth(), 24);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 24);
         } else {
-            start = new Date(now.getFullYear(), now.getMonth() - 1, 23);
-            end = new Date(now.getFullYear(), now.getMonth(), 23);
+            start = new Date(now.getFullYear(), now.getMonth() - 1, 24);
+            end = new Date(now.getFullYear(), now.getMonth(), 24);
         }
-        end.setDate(end.getDate() - 1);
         setStartDate(start.toISOString().split('T')[0]);
         setEndDate(end.toISOString().split('T')[0]);
     };
