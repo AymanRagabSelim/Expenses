@@ -110,7 +110,7 @@ export const Reports = () => {
                         onClick={setToSalaryMonth}
                         className="text-sm text-blue-600 hover:text-blue-800 font-medium underline"
                     >
-                        Set to Current Salary Month (23rd-22nd)
+                        Set to Current Salary Month (24th-24th)
                     </button>
                 </div>
 

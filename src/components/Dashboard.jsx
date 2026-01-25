@@ -15,12 +15,12 @@ export const Dashboard = ({ onEdit }) => {
 
     const getDefaultDates = () => {
         const now = new Date();
-        const startDate = new Date(now.getFullYear(), now.getMonth(), 24);
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 24);
+        const start = new Date(now);
+        start.setMonth(start.getMonth() - 1);
 
         return {
-            start: startDate.toISOString().split('T')[0],
-            end: endDate.toISOString().split('T')[0]
+            start: start.toISOString().split('T')[0],
+            end: now.toISOString().split('T')[0]
         };
     };
 
@@ -138,7 +138,7 @@ export const Dashboard = ({ onEdit }) => {
                             onClick={setToSalaryMonth}
                             className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline"
                         >
-                            Set to Current Salary Month (23rd-22nd)
+                            Set to Current Salary Month (24th-24th)
                         </button>
                     </div>
 
