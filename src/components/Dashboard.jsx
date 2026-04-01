@@ -170,7 +170,7 @@ export const Dashboard = ({ onEdit }) => {
             </div>
 
             <div className={`rounded-xl p-6 text-white shadow-lg ${filterType === 'credit' ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
-                filterType === 'debit' ? 'bg-gradient-to-r from-red-500 to-pink-600' :
+                filterType === 'debit' ? 'bg-gradient-to-r from-blue-500 to-indigo-600' :
                     'bg-gradient-to-r from-blue-600 to-purple-600'
                 }`}>
                 <h2 className="text-lg font-medium opacity-90">{getTitle()}</h2>
@@ -191,7 +191,7 @@ export const Dashboard = ({ onEdit }) => {
                             return (
                                 <div key={expense.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-2 h-10 rounded-full ${isCredit ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                        <div className={`w-2 h-10 rounded-full ${isCredit ? 'bg-green-500' : 'bg-blue-500'}`}></div>
                                         <div>
                                             <div className="font-medium text-gray-800 dark:text-white">{expense.category}</div>
                                             <div className="text-sm text-gray-500">{expense.date} {expense.note && `• ${expense.note}`}</div>
@@ -199,7 +199,7 @@ export const Dashboard = ({ onEdit }) => {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="text-right">
-                                            <div className={`font-bold ${isCredit ? 'text-green-600' : 'text-red-600'}`}>
+                                            <div className={`font-bold ${isCredit ? 'text-green-600' : 'text-blue-600'}`}>
                                                 {isCredit ? '+' : '-'} {new Intl.NumberFormat('en-US', { style: 'currency', currency: expense.currency }).format(expense.amount)}
                                             </div>
                                             {expense.currency !== selectedCurrency && (
